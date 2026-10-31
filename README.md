@@ -1,56 +1,116 @@
-# 📦 NexusX — Capa de Base de Datos e Infraestructura
+# NexusX - Database Module
 
-Este directorio contiene la configuración de la infraestructura de datos y la documentación del modelo relacional para la plataforma **NexusX**. Aquí se centraliza la definición de tablas, los scripts de inicialización de MySQL 8.0 y la orquestación en contenedores mediante Docker.
+## 🛠️ Tecnologías
 
----
+- MySQL 8.0
+- Docker
+- Docker Compose
+- DBeaver (opcional)
 
-## 🛠️ Tecnologías Utilizadas
-
-* **Gestor de Base de Datos:** MySQL 8.0
-* **Orquestación y Contenedores:** Docker & Docker Compose
-* **Gestor SQL Recomendado:** DBeaver / MySQL Workbench
-
----
-
-## 📂 Archivos del Directorio
-
-En esta carpeta encontrarás los siguientes componentes clave:
+## 📁 Estructura del directorio
 
 | Archivo | Descripción |
-| :--- | :--- |
-| `docker-compose.yml` | Archivo de orquestación para levantar el contenedor MySQL (`dbNexusX`) en el puerto `3307`. |
-| `db.sql` | Script SQL de creación del esquema `nexusXDB`, tablas, claves primarias/foráneas y datos semilla. |
-| `NexusX ERD.png` | Diagrama Entidad-Relación (MER) en formato de alta resolución (fondo transparente). |
-| `Nexus ERD.jpeg` | Vista rápida en formato imagen del Diagrama Entidad-Relación. |
-| `LICENSE` | Licencia MIT de uso y distribución del software. |
+|---|---|
+| `docker-compose.yml` | Configuración del contenedor MySQL. |
+| `db.sql` | Script de creación e inicialización de `nexusXDB`. |
+| `NexusX ERD.png` | Diagrama Entidad-Relación. |
+| `Nexus ERD.jpeg` | Diagrama alternativo del modelo de datos. |
+| `LICENSE` | Licencia MIT. |
+
+## 🗄️ Modelo de datos
+
+La base de datos `nexusXDB` está organizada en dos dominios:
+
+### 1. Catálogo
+
+Gestiona las categorías y los productos.
+
+- `categories`: almacena las categorías.
+- `products`: almacena los productos asociados a una categoría.
+
+**Relación 1:N**
+
+```text
+categories (1) ───── (N) products
+```
+
+Una categoría puede contener múltiples productos.
+
+### 2. Importaciones CSV
+
+Gestiona las importaciones y sus respectivos errores.
+
+- `imports`: registra los procesos de importación.
+- `import_errors`: almacena los errores detectados durante cada importación.
+
+**Relación 1:N**
+
+```text
+imports (1) ───── (N) import_errors
+```
+
+Una importación puede registrar múltiples errores.
+
+> **Nota técnica:** La columna `row_number` de `import_errors` debe escribirse entre comillas invertidas (`` `row_number` ``) en las consultas SQL para evitar conflictos con el nombre de la función de ventana `ROW_NUMBER` de MySQL 8.0.
+
+## 🐳 Despliegue con Docker
+
+**Requisito:** Tener Docker y Docker Compose instalados.
+
+### 1. Iniciar la base de datos
+
+Desde el directorio `db/`, ejecutar:
+
+```bash
+docker compose up -d
+```
+
+### 2. Verificar el contenedor
+
+```bash
+docker compose ps
+```
+
+### 3. Consultar los registros
+
+```bash
+docker compose logs -f
+```
+
+### 4. Detener la base de datos
+
+```bash
+docker compose down
+```
+
+## 🔌 Conexión desde DBeaver / Cliente SQL
+
+Puedes utilizar DBeaver o cualquier otro cliente compatible con MySQL. Configura la conexión manteniendo los siguientes parámetros:
+
+- **Host:** `localhost`
+- **Puerto:** `3307`
+- **Base de Datos:** `nexusXDB`
+- **Usuario:** `root`
+- **Contraseña:** `root`
+
+Una vez establecida la conexión, puedes consultar las tablas y ejecutar consultas SQL.
+
+Para ejecutar el script `db.sql` desde DBeaver:
+
+1. Abrir el archivo en el editor SQL.
+2. Seleccionar la conexión correspondiente.
+3. Ejecutar el script con `Alt + X`.
+
+## ⚠️ Consideraciones
+
+- El script `db.sql` se ejecuta automáticamente durante la inicialización inicial de MySQL si está montado correctamente en `/docker-entrypoint-initdb.d/`.
+- Si el volumen de datos ya fue inicializado, los cambios en `db.sql` no se ejecutan automáticamente.
+- Las credenciales indicadas son para desarrollo y no deben utilizarse en producción.
+
+## 📄 Licencia
+
+Distribuido bajo la licencia MIT. Consultar el archivo `LICENSE` para más información.
 
 ---
 
-## 📐 Esquema de la Base de Datos (`nexusXDB`)
-
-El modelo está compuesto por 4 tablas principales organizadas en dos dominios:
-
-### 1. Dominio de Catálogo de Productos
-* **`categories`**: Almacena las categorías de los productos.
-* **`products`**: Registra los artículos del catálogo con su código único, precio, stock y relación.
-
-### 2. Dominio de Carga e Importaciones CSV
-* **`imports`**: Guarda el historial y estado de cada archivo CSV procesado (`processed_at`, `total_rows`, `accepted_rows`, `rejected_rows`, `status`).
-* **`import_errors`**: Registra las filas rechazadas en una importación, capturando el número de fila (`` `row_number` ``), la trama cruda (`raw_data`) y el motivo del fallo.
-
-> ⚠️ **Nota técnica:** La columna `` `row_number` `` en `import_errors` utiliza comillas invertidas (*backticks*) para evitar conflictos con la palabra reservada de MySQL 8.0 (`ROW_NUMBER()`).
-
----
-
-## 🚀 Cómo Desplegar y Levantar la Base de Datos
-
-### Requisitos Previos
-* Tener instalado **Docker** y **Docker Desktop / Engine**.
-* Clonar o descompilar este proyecto en tu máquina local.
-
-### Pasos de Ejecución
-
-1. **Abrir la terminal** en este directorio (`db/`).
-2. **Levantar el contenedor con Docker Compose:**
-   ```bash
-   docker compose up -d
+**NexusX | Database Module**
